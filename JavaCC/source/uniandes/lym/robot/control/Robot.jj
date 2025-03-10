@@ -84,6 +84,25 @@ TOKEN :
 		|  	<#DIGIT: ["0"-"9"] >
         
 }
+TOKEN :
+{
+       <VAR: ["a"-"z"](["a"-"z" "0"-"9"]*)>
+}
+TOKEN :
+{
+  	   <IF: "if"> | <ELSE: "else">
+}
+TOKEN :
+{
+       <PROC: "proc">
+}
+TOKEN :
+{
+  		<REPEAT: "repeat">
+}
+
+
+
 
 
 
