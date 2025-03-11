@@ -38,10 +38,7 @@ public class Robot
 
 
 	private RobotWorldDec world;
-	private HashMap<String, Integer> variables = new HashMap<>();
-    private HashMap<String, String> procedures = new HashMap<>();
-    private Stack<HashMap<String, Integer>> scopes = new Stack<>();
-	
+
 	
 	void setWorld(RobotWorld w) {
 		world = (RobotWorldDec) w;	
@@ -161,12 +158,7 @@ TOKEN :
 	}
 
 
-	void assignment(): {
-  		Sting varName;
-  		int value;
- 	 } {
-			varName = variable() ":=" value = num() "." {variables.put(varName, value); }
-    }	
+
 	
 
 	/**
