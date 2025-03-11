@@ -8,18 +8,15 @@ import uniandes.lym.robot.view.Console;
 import java.awt.Point;
 import java.io.*;
 import java.util.Vector;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Stack;
 
 @SuppressWarnings("serial")
 public class Robot implements RobotConstants {
 
 
         private RobotWorldDec world;
-        private HashMap<String, Integer> variables = new HashMap<>();
-    private HashMap<String, String> procedures = new HashMap<>();
-    private Stack<HashMap<String, Integer>> scopes = new Stack<>();
+
+
 
 
         void setWorld(RobotWorld w) {

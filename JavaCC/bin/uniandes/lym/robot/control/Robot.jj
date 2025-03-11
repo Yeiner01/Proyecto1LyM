@@ -117,7 +117,7 @@ TOKEN :
 	
 	{
 		(		  (
-		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
+		 	 <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
 		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
 		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
 		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
@@ -160,9 +160,13 @@ TOKEN :
 
 	}
 
-	
 
-	
+	void assignment(): {
+  		Sting varName;
+  		int value;
+ 	 } {
+			varName = variable() ":=" value = num() "." {variables.put(varName, value); }
+    }	
 	
 
 	/**
