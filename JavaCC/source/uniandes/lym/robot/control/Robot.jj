@@ -89,7 +89,7 @@ TOKEN :
 }
 TOKEN :
 {
-       <VAR: ["a"-"z"](["a"-"z" "0"-"9"]*)>
+       <VAR: ["a"-"z"](["a"-"z"  "0"-"9"]*)>
 }
 TOKEN :
 {
@@ -162,7 +162,7 @@ TOKEN :
 		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
 
 	}
-	void assignment() : {
+	void assignment() : {    //Lo añadio Jose, quitarlo si no sirve
 	    String varName;
 	    int value;
 	} {

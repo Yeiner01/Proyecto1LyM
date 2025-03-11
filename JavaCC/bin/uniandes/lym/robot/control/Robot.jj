@@ -38,6 +38,9 @@ public class Robot
 
 
 	private RobotWorldDec world;
+	private HashMap<String, Integer> variables = new HashMap<>();
+    private HashMap<String, String> procedures = new HashMap<>();
+    private Stack<HashMap<String, Integer>> scopes = new Stack<>();
 	
 	
 	void setWorld(RobotWorld w) {
@@ -84,6 +87,25 @@ TOKEN :
 		|  	<#DIGIT: ["0"-"9"] >
         
 }
+TOKEN :
+{
+       <VAR: ["a"-"z"](["a"-"z"  "0"-"9"]*)>
+}
+TOKEN :
+{
+  	   <IF: "if"> | <ELSE: "else">
+}
+TOKEN :
+{
+       <PROC: "proc">
+}
+TOKEN :
+{
+  		<REPEAT: "repeat">
+}
+
+
+
 
 
 
@@ -140,6 +162,13 @@ TOKEN :
 		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
 
 	}
+	void assignment() : {    //Lo añadio Jose, quitarlo si no sirve
+	    String varName;
+	    int value;
+	} {
+	    varName = variable() ":=" value = num() "." { variables.put(varName, value); }
+	}
+	
 
 	
 	
