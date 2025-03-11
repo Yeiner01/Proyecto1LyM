@@ -8,18 +8,13 @@ import uniandes.lym.robot.view.Console;
 import java.awt.Point;
 import java.io.*;
 import java.util.Vector;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Stack;
 
 @SuppressWarnings("serial")
 public class Robot implements RobotConstants {
 
 
         private RobotWorldDec world;
-        private HashMap<String, Integer> variables = new HashMap<>();
-    private HashMap<String, String> procedures = new HashMap<>();
-    private Stack<HashMap<String, Integer>> scopes = new Stack<>();
 
 
         void setWorld(RobotWorld w) {
@@ -27,6 +22,65 @@ public class Robot implements RobotConstants {
         }
 
         String salida=new String();
+        boolean isValidMOV(String token) {
+        return token.equals("Mov");
+    }
+
+    boolean isValidRIGHT(String token) {
+        return token.equals("RIGHT");
+    }
+
+    boolean isValidPUT(String token) {
+        return token.equals("Put");
+    }
+
+    boolean isValidPICK(String token) {
+        return token.equals("Pick");
+    }
+
+    boolean isValidPOP(String token) {
+        return token.equals("Pop");
+    }
+
+    boolean isValidGO(String token) {
+        return token.equals("GO");
+    }
+
+    boolean isValidHOP(String token) {
+        return token.equals("HOP");
+    }
+
+    boolean isValidBALLOONS(String token) {
+        return token.equals("BALLOONS");
+    }
+
+    boolean isValidCHIPS(String token) {
+        return token.equals("CHIPS");
+    }
+
+    boolean isValidIF(String token) {
+        return token.equals("if");
+    }
+
+    boolean isValidELSE(String token) {
+        return token.equals("else");
+    }
+
+    boolean isValidPROC(String token) {
+        return token.equals("proc");
+    }
+
+    boolean isValidREPEAT(String token) {
+        return token.equals("repeat");
+}
+        boolean isValidNUM(String token) {
+        try {
+            Integer.parseInt(token);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
 //boolean command(uniandes.lym.robot.view.Console sistema) :
   final public         boolean command(Console sistema) throws ParseException {int x,y;
@@ -391,4 +445,4 @@ try
   final public void disable_tracing() {
   }
 
-}
+  }
