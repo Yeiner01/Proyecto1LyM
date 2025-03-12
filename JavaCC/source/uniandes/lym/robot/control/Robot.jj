@@ -104,7 +104,34 @@ public class Robot
             return false;
         }
     }
+    public List<String> extraerTokens(String input) {   //Seria la funcion que crea la lista de tokens
+        List<String> tokens = new ArrayList<>();     //Toca revisar  es como llegan los tokens
+        Scanner scanner = new Scanner(input);        // pero en general la idea puede ser clara
+        
+        while (scanner.hasNext()) {
+            tokens.add(scanner.next());
+        }
+        scanner.close();
+        return tokens;
+    }
+    
+	public boolean validarTokens(String input)   //función que valida las condiciones de las funciones anteriores, si se cumple todo es true, si no se cumple alguna false
+        List<String> tokens = extraerTokens(input);   //llamada que extrae la lista de tokens
+        for (String token : tokens) {
+            if (!(isValidMOV(token) || isValidRIGHT(token) || isValidPUT(token) ||
+                  isValidPICK(token) || isValidPOP(token) || isValidGO(token) ||
+                  isValidHOP(token) || isValidBALLOONS(token) || isValidCHIPS(token) ||
+                  isValidIF(token) || isValidELSE(token) || isValidPROC(token) ||
+                  isValidREPEAT(token) || isValidNUM(token))) 
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
   }
+  
 
 PARSER_END(Robot)
 SKIP:
