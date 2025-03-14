@@ -8,17 +8,12 @@ Modificado por Silvia Takahashi
 
 
  **/
-
-
 options 
 {
-  
-	LOOKAHEAD=1; 
-	IGNORE_CASE=true;
-	STATIC = false;
-	
+    LOOKAHEAD=2; 
+    IGNORE_CASE=true;
+    STATIC = false;
 }
-   
 
 PARSER_BEGIN(Robot)
 
@@ -26,223 +21,103 @@ package uniandes.lym.robot.control;
 
 import uniandes.lym.robot.kernel.*;
 import uniandes.lym.robot.view.Console;
- 
-import java.awt.Point;
-import java.io.*;
-import java.util.Vector;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
-@SuppressWarnings("serial")
 public class Robot 
 {
+    private ArrayList<String> variables = new ArrayList<>(), procedimientos = new ArrayList<>();
+    private RobotWorldDec world;
+    String salida = "";
 
-
-	private RobotWorldDec world;
-
-	
-	void setWorld(RobotWorld w) {
-		world = (RobotWorldDec) w;	
-	}
-
-	String salida=new String();
-	boolean isValidMOV(String token) {
-        return token.equals("Mov");
-    }
-
-    boolean isValidRIGHT(String token) {
-        return token.equals("RIGHT");
-    }
-
-    boolean isValidPUT(String token) {
-        return token.equals("Put");
-    }
-
-    boolean isValidPICK(String token) {
-        return token.equals("Pick");
-    }
-
-    boolean isValidPOP(String token) {
-        return token.equals("Pop");
-    }
-
-    boolean isValidGO(String token) {
-        return token.equals("GO");
-    }
-
-    boolean isValidHOP(String token) {
-        return token.equals("HOP");
-    }
-
-    boolean isValidBALLOONS(String token) {
-        return token.equals("BALLOONS");
-    }
-
-    boolean isValidCHIPS(String token) {
-        return token.equals("CHIPS");
-    }
-
-    boolean isValidIF(String token) {
-        return token.equals("if");
-    }
-
-    boolean isValidELSE(String token) {
-        return token.equals("else");
-    }
-
-    boolean isValidPROC(String token) {
-        return token.equals("proc");
-    }
-
-    boolean isValidREPEAT(String token) {
-        return token.equals("repeat");
+    void setWorld(RobotWorld w) { world = (RobotWorldDec) w; }
 }
-	boolean isValidNUM(String token) {
-        try {
-            Integer.parseInt(token);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-  }
-
 PARSER_END(Robot)
-SKIP:
+
+SKIP: { " " | "\r" | "\t" | "\n" }
+
+TOKEN: 
 {
-	" "
-	|	"\r"
-	|	"\t"
-	| "\n"
+    <AROUND: "#AROUND"> | <BACK: "#BACK"> | <CANJUMP: "CANJUMP"> | <CANMOVE: "CANMOVE"> | <CANPICK: "CANPICK"> |
+    <CANPUT: "CANPUT"> | <DO: "DO"> | <D: ":"> | <ELSE: "ELSE"> | <FACE: "FACE"> | <FACING: "FACING"> |
+    <FOR: "FOR"> | <FRONT: "#FRONT"> | <GOTO: "GOTO"> | <IF: "IF"> | <INDIR: "INDIR"> | <JUMP: "JUMP"> |
+    <LEFT: "#LEFT"> | <MOVE: "MOVE"> | <NOP: "NOP"> | <NOT: "NOT"> | <NORTH: "#NORTH"> | <OFTYPE: "OFTYPE"> |
+    <P1: "["> | <P2: "]"> | <PICK: "PICK"> | <PROC: "PROC"> | <PUT: "PUT"> | <PUNTO: "."> | <REPEAT: "REPEAT"> |
+    <RIGHT: "#RIGHT"> | <SOUTH: "#SOUTH"> | <THEN: "THEN"> | <TOTHE: "TOTHE"> | <TURN: "TURN"> | <V: "|"> |
+    <WEST: "#WEST"> | <EAST: "#EAST"> | <WHILE: "WHILE"> | <WITH: "WITH"> | <BALLOONS: "#BALLOONS"> | <CHIPS: "#CHIPS"> |
+    <NUMBER: (["0"-"9"])+> | <WORD: (["a"-"z"])+>
 }
 
-TOKEN: /* Nombres de Comandos */
+boolean command(Console sistema):
 {
-
-			<MOV:  "Mov">
-		| 	<RIGHT: "RIGHT">
-		| 	<PUT: "Put">
-		| 	<PICK: "Pick">
-		|  < POP: "Pop" >
-		|  <GO: "GO" >
-        |  < HOP:  "HOP" >		
-
+    boolean answ = true;
+}
+{
+    params(true) (answ = proc() | answ = block(true, 1))*
+    { salida = answ ? "Everything is correct" : "Error"; try { Thread.sleep(900); } catch (Exception e) { } sistema.printOutput(salida); return true; }
+    | <EOF> { return false; }
 }
 
-TOKEN:
-{
-		<BALLOONS:  "BALLOONS" >
-		|	<CHIPS:     "CHIPS"  >	
+void params(boolean global): { } { <V> (<WORD> { if (global) variables.add(token.image); })* <V> }
 
+int num(): { } { <NUMBER> { return Integer.parseInt(token.image); } }
+
+void put(int f): { } { (<CHIPS> { world.putChips(f); salida = "Put Chips"; } | <BALLOONS> { world.putBalloons(f); salida = "Put Balloons"; }) }
+
+void get(int f): { } { (<CHIPS> { world.pickChips(f); salida = "Pick chips"; } | <BALLOONS> { world.grabBalloons(f); salida = "Pick balloons"; }) }
+
+int getc(): { } { <CHIPS> { return world.chipExists() ? world.chipsToPick() : 0; } | <BALLOONS> { return world.countBalloons(); } }
+
+int putc(int x): { } { <CHIPS> { return world.freeSpacesForChips() > x ? world.getMyChips() : Integer.MAX_VALUE; } | <BALLOONS> { return world.getMyBalloons(); } }
+
+boolean init_vars(): { } { <WORD> { return procedimientos.contains(token.image); } <PUNTO> }
+
+boolean init_vars1(ArrayList<String> local): { } { <WORD> ":=" (<NUMBER> | <WORD> { return variables.contains(token.image) || local.contains(token.image); }) <PUNTO> }
+
+boolean block(boolean answ, int x): { } { <P1> (funciones(answ, x, null) | estructures() | init_vars())* <P2> { return answ; } }
+
+boolean block1(boolean answ, int x, ArrayList<String> local): { } { <P1> params(false) (funciones(answ, x, local) | estructures() | init_vars1(local))* <P2> { return answ; } }
+
+boolean proc(): { ArrayList<String> local = new ArrayList<>(); } { <PROC> <WORD> { procedimientos.add(token.image); } (<D> <WORD> { local.add(token.image); })* block1(true, 0, local) { return true; } }
+
+void estructures(): { int x; } { <IF> <D> (negationcond() | condiciones()) <THEN> <D> block(true, 1) <ELSE> <D> block(false, 1) | <WHILE> <D> (negationcond() | condiciones()) <DO> <D> block(true, 1) | <FOR> <D> x=num() <REPEAT> <D> block(true, x) }
+
+boolean negationcond(): { } { <NOT> <D> (negationcond() | condiciones()) { return false; } }
+
+boolean condiciones(): { int x, y; } 
+{ 
+    <FACING> <D> (<NORTH> | <SOUTH> | <WEST> | <EAST>) { return true; } 
+    | <CANPUT> <D> x=num() <OFTYPE> <D> y=putc(x) { return x > y; } 
+    | <CANPICK> <D> x=num() <OFTYPE> <D> y=getc() { return x > y; } 
+    | <CANMOVE> <D> x=num() <INDIR> <D> (<NORTH> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getY() - x, 0); } 
+                                       | <SOUTH> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getY() + x, 1); } 
+                                       | <EAST> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getX() + x, 2); } 
+                                       | <WEST> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getX() - x, 3); }) 
 }
 
-
-
-TOKEN :
+boolean funciones(boolean cumple, int ciclo, ArrayList<String> local):
 {
-		<NUM: (<DIGIT>)+ >
-		|  	<#DIGIT: ["0"-"9"] >
-        
+    int x, y; boolean answ = true;
 }
-
-TOKEN :
 {
-  	   <IF: "if"> | <ELSE: "else">
+    (<MOVE> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
+        (<TOTHE> <D> (<FRONT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(x, false); } 
+                     | <BACK> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(-x, false); } 
+                     | <RIGHT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { world.turnRight(); world.moveForward(x, false); for (int i = 0; i < 3; i++) world.turnRight(); } } 
+                     | <LEFT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { for (int i = 0; i < 3; i++) world.turnRight(); world.moveForward(x, false); world.turnRight(); } }) 
+        | <INDIR> <D> (<NORTH> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingNorth()) world.turnRight(); world.moveForward(x, false); } } 
+                      | <SOUTH> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingSouth()) world.turnRight(); world.moveForward(x, false); } } 
+                      | <EAST> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingEast()) world.turnRight(); world.moveForward(x, false); } } 
+                      | <WEST> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingWest()) world.turnRight(); world.moveForward(x, false); } }))
+    | <JUMP> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
+        (<TOTHE> <D> (<FRONT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(x, true); } 
+                     | <BACK> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(-x, true); }))
+    | <NOP>
+    | <GOTO> <D> (x=num() | <WORD> { x=1; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
+        <WITH> <D> (y=num() | <WORD> { y=1; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) 
+        { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.setPostion(x, y); }
+    | <TURN> <D> (<RIGHT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.turnRight(); } 
+                 | <LEFT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { for (int i = 0; i < 3; i++) world.turnRight(); } })
+    | <PUT> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) <OFTYPE> <D> { for (int j = 0; j < ciclo; j++) if (cumple && answ) put(x); }
+    | <PICK> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) <OFTYPE> <D> { for (int j = 0; j < ciclo; j++) if (cumple && answ) get(x); })
+    <PUNTO> { return answ; }
 }
-TOKEN :
-{
-       <PROC: "proc">
-}
-TOKEN :
-{
-  		<REPEAT: "repeat">
-}
-
-
-
-
-
-
-	//boolean command(uniandes.lym.robot.view.Console sistema) :
-	boolean command(Console sistema):
-	{	
-		
-		int x,y;
-		salida=new String();	
-	}
-
-	
-	{
-		(		  (
-		 	 <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
-		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
-		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
-		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
-		|  <PUT> "("  put() ")"					  			
-		|  <PICK> "(" get()  ")"	
-	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
-		) ";" 
-
-		{
-		    try {
-	    			 Thread.sleep(900);
-	    	    } catch (InterruptedException e) {
-	    			        System.err.format("IOException: %s%n", e);
-	    		    }
-	    			 
-			sistema.printOutput(salida);
-			return true;
-		})+
-
-    	| <EOF> {return false;} 
-	}
-
-	void put() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
-		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
-
-	}
-
-	void get() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
-		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
-
-	}
-
-
-
-	
-
-	/**
-	 * Unsigned decimal number
-	 * @return the corresponding value of the string
-	 * @error  corresponding value is too large
-	 */
-
-	int num() throws Error:
-	{	
-		int total=1;
-	}
-	{
-		<NUM>
-		{
-			try 
-			{
-				total = Integer.parseInt(token.image);
-			} 
-			catch (NumberFormatException ee) 
-			{
-				throw new Error("Number out of bounds: "+token.image+" !!");
-			}
-			return total;
-		}
-	}
-
-	
