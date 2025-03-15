@@ -1,13 +1,12 @@
-/*
-Gramatica para el Robot:
+
+/* Gramatica para el Robot:
 Autor: Alejandro Arango
 Modificado por: Silvia Takahashi
 Modificado por: Juan Pablo Morales.
 Agregadas producciones para manejar globos
 Modificado por Silvia Takahashi
+**/
 
-
- **/
 options 
 {
     LOOKAHEAD=2; 
@@ -35,16 +34,68 @@ PARSER_END(Robot)
 
 SKIP: { " " | "\r" | "\t" | "\n" }
 
-TOKEN: 
-{
-    <AROUND: "#AROUND"> | <BACK: "#BACK"> | <CANJUMP: "CANJUMP"> | <CANMOVE: "CANMOVE"> | <CANPICK: "CANPICK"> |
-    <CANPUT: "CANPUT"> | <DO: "DO"> | <D: ":"> | <ELSE: "ELSE"> | <FACE: "FACE"> | <FACING: "FACING"> |
-    <FOR: "FOR"> | <FRONT: "#FRONT"> | <GOTO: "GOTO"> | <IF: "IF"> | <INDIR: "INDIR"> | <JUMP: "JUMP"> |
-    <LEFT: "#LEFT"> | <MOVE: "MOVE"> | <NOP: "NOP"> | <NOT: "NOT"> | <NORTH: "#NORTH"> | <OFTYPE: "OFTYPE"> |
-    <P1: "["> | <P2: "]"> | <PICK: "PICK"> | <PROC: "PROC"> | <PUT: "PUT"> | <PUNTO: "."> | <REPEAT: "REPEAT"> |
-    <RIGHT: "#RIGHT"> | <SOUTH: "#SOUTH"> | <THEN: "THEN"> | <TOTHE: "TOTHE"> | <TURN: "TURN"> | <V: "|"> |
-    <WEST: "#WEST"> | <EAST: "#EAST"> | <WHILE: "WHILE"> | <WITH: "WITH"> | <BALLOONS: "#BALLOONS"> | <CHIPS: "#CHIPS"> |
-    <NUMBER: (["0"-"9"])+> | <WORD: (["a"-"z"])+>
+TOKEN: {
+    
+   <IF: "IF">
+    | <THEN: "THEN">
+    | <ELSE: "ELSE">
+    | <FOR: "FOR">
+    | <WHILE: "WHILE">
+    | <REPEAT: "REPEAT">
+    | <GOTO: "GOTO">
+
+    
+  | <DO: "DO">
+    | <MOVE: "MOVE">
+    | <JUMP: "JUMP">
+    | <TURN: "TURN">
+    | <PICK: "PICK">
+    | <PUT: "PUT">
+    | <NOP: "NOP">
+
+    
+  | <CANJUMP: "CANJUMP">
+    | <CANMOVE: "CANMOVE">
+    | <CANPICK: "CANPICK">
+    | <CANPUT: "CANPUT">
+  | <NOT: "NOT">
+    | <OFTYPE: "OFTYPE">
+
+    
+  | <NORTH: "#NORTH">
+    | <SOUTH: "#SOUTH">
+    | <WEST: "#WEST">
+    | <EAST: "#EAST">
+    | <LEFT: "#LEFT">
+    | <RIGHT: "#RIGHT">
+    | <FRONT: "#FRONT">
+    | <BACK: "#BACK">
+    | <AROUND: "#AROUND">
+    | <FACE: "FACE">
+    | <FACING: "FACING">
+    | <TOTHE: "TOTHE">
+
+    
+  | <PROC: "PROC">
+    | <INDIR: "INDIR">
+
+    
+  | <BALLOONS: "#BALLOONS">
+  | <CHIPS: "#CHIPS">
+
+    
+  | <P1: "[">
+    | <P2: "]">
+    | <PUNTO: ".">
+    | <PUNTOS: ":">
+    | <PALO: "|">
+
+    
+ |  <WITH: "WITH">
+
+    
+  | <NUMBER: (["0"-"9"])+>
+    | <WORD: (["a"-"z"])+>
 }
 
 boolean command(Console sistema):
@@ -53,11 +104,11 @@ boolean command(Console sistema):
 }
 {
     params(true) (answ = proc() | answ = block(true, 1))*
-    { salida = answ ? "Everything is correct" : "Error"; try { Thread.sleep(900); } catch (Exception e) { } sistema.printOutput(salida); return true; }
+    { salida = answ ? "Everything is correct" : "Error"; try { Thread.sleep(3000); } catch (Exception e) { } sistema.printOutput(salida); return true; }
     | <EOF> { return false; }
 }
 
-void params(boolean global): { } { <V> (<WORD> { if (global) variables.add(token.image); })* <V> }
+void params(boolean global): { } { <PALO> (<WORD> { if (global) variables.add(token.image); })* <PALO> }
 
 int num(): { } { <NUMBER> { return Integer.parseInt(token.image); } }
 
@@ -77,18 +128,18 @@ boolean block(boolean answ, int x): { } { <P1> (funciones(answ, x, null) | estru
 
 boolean block1(boolean answ, int x, ArrayList<String> local): { } { <P1> params(false) (funciones(answ, x, local) | estructures() | init_vars1(local))* <P2> { return answ; } }
 
-boolean proc(): { ArrayList<String> local = new ArrayList<>(); } { <PROC> <WORD> { procedimientos.add(token.image); } (<D> <WORD> { local.add(token.image); })* block1(true, 0, local) { return true; } }
+boolean proc(): { ArrayList<String> local = new ArrayList<>(); } { <PROC> <WORD> { procedimientos.add(token.image); } (<PUNTOS> <WORD> { local.add(token.image); })* block1(true, 0, local) { return true; } }
 
-void estructures(): { int x; } { <IF> <D> (negationcond() | condiciones()) <THEN> <D> block(true, 1) <ELSE> <D> block(false, 1) | <WHILE> <D> (negationcond() | condiciones()) <DO> <D> block(true, 1) | <FOR> <D> x=num() <REPEAT> <D> block(true, x) }
+void estructures(): { int x; } { <IF> <PUNTOS> (negationcond() | condiciones()) <THEN> <PUNTOS> block(true, 1) <ELSE> <PUNTOS> block(false, 1) | <WHILE> <PUNTOS> (negationcond() | condiciones()) <DO> <PUNTOS> block(true, 1) | <FOR> <PUNTOS> x=num() <REPEAT> <PUNTOS> block(true, x) }
 
-boolean negationcond(): { } { <NOT> <D> (negationcond() | condiciones()) { return false; } }
+boolean negationcond(): { } { <NOT> <PUNTOS> (negationcond() | condiciones()) { return false; } }
 
 boolean condiciones(): { int x, y; } 
 { 
-    <FACING> <D> (<NORTH> | <SOUTH> | <WEST> | <EAST>) { return true; } 
-    | <CANPUT> <D> x=num() <OFTYPE> <D> y=putc(x) { return x > y; } 
-    | <CANPICK> <D> x=num() <OFTYPE> <D> y=getc() { return x > y; } 
-    | <CANMOVE> <D> x=num() <INDIR> <D> (<NORTH> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getY() - x, 0); } 
+    <FACING> <PUNTOS> (<NORTH> | <SOUTH> | <WEST> | <EAST>) { return true; } 
+    | <CANPUT> <PUNTOS> x=num() <OFTYPE> <PUNTOS> y=putc(x) { return x > y; } 
+    | <CANPICK> <PUNTOS> x=num() <OFTYPE> <PUNTOS> y=getc() { return x > y; } 
+    | <CANMOVE> <PUNTOS> x=num() <INDIR> <PUNTOS> (<NORTH> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getY() - x, 0); } 
                                        | <SOUTH> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getY() + x, 1); } 
                                        | <EAST> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getX() + x, 2); } 
                                        | <WEST> { return world.blockedInRange((int)world.getPosition().getX(), (int)world.getPosition().getY(), (int)world.getPosition().getX() - x, 3); }) 
@@ -99,25 +150,25 @@ boolean funciones(boolean cumple, int ciclo, ArrayList<String> local):
     int x, y; boolean answ = true;
 }
 {
-    (<MOVE> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
-        (<TOTHE> <D> (<FRONT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(x, false); } 
+    (<MOVE> <PUNTOS> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
+        (<TOTHE> <PUNTOS> (<FRONT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(x, false); } 
                      | <BACK> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(-x, false); } 
                      | <RIGHT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { world.turnRight(); world.moveForward(x, false); for (int i = 0; i < 3; i++) world.turnRight(); } } 
                      | <LEFT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { for (int i = 0; i < 3; i++) world.turnRight(); world.moveForward(x, false); world.turnRight(); } }) 
-        | <INDIR> <D> (<NORTH> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingNorth()) world.turnRight(); world.moveForward(x, false); } } 
+        | <INDIR> <PUNTOS> (<NORTH> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingNorth()) world.turnRight(); world.moveForward(x, false); } } 
                       | <SOUTH> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingSouth()) world.turnRight(); world.moveForward(x, false); } } 
                       | <EAST> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingEast()) world.turnRight(); world.moveForward(x, false); } } 
                       | <WEST> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { while (!world.facingWest()) world.turnRight(); world.moveForward(x, false); } }))
-    | <JUMP> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
-        (<TOTHE> <D> (<FRONT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(x, true); } 
+    | <JUMP> <PUNTOS> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
+        (<TOTHE> <PUNTOS> (<FRONT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(x, true); } 
                      | <BACK> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.moveForward(-x, true); }))
     | <NOP>
-    | <GOTO> <D> (x=num() | <WORD> { x=1; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
-        <WITH> <D> (y=num() | <WORD> { y=1; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) 
+    | <GOTO> <PUNTOS> (x=num() | <WORD> { x=1; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; })
+        <WITH> <PUNTOS> (y=num() | <WORD> { y=1; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) 
         { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.setPostion(x, y); }
-    | <TURN> <D> (<RIGHT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.turnRight(); } 
+    | <TURN> <PUNTOS> (<RIGHT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) world.turnRight(); } 
                  | <LEFT> { for (int j = 0; j < ciclo; j++) if (cumple && answ) { for (int i = 0; i < 3; i++) world.turnRight(); } })
-    | <PUT> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) <OFTYPE> <D> { for (int j = 0; j < ciclo; j++) if (cumple && answ) put(x); }
-    | <PICK> <D> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) <OFTYPE> <D> { for (int j = 0; j < ciclo; j++) if (cumple && answ) get(x); })
+    | <PUT> <PUNTOS> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) <OFTYPE> <PUNTOS> { for (int j = 0; j < ciclo; j++) if (cumple && answ) put(x); }
+    | <PICK> <PUNTOS> (x=num() | <WORD> { x=0; if (local != null && !variables.contains(token.image) && !local.contains(token.image)) answ = false; }) <OFTYPE> <PUNTOS> { for (int j = 0; j < ciclo; j++) if (cumple && answ) get(x); })
     <PUNTO> { return answ; }
 }
